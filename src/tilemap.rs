@@ -2,7 +2,7 @@ use bitflags::bitflags;
 use std::sync::Mutex;
 
 use bevy::{
-    core::Byteable,
+    core::{Pod, Zeroable},
     prelude::*,
     reflect::TypeUuid,
     render::{
@@ -35,14 +35,13 @@ pub struct Chunk {
 }
 
 #[repr(C)]
-#[derive(Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, Pod, Zeroable)]
 pub struct TileGpuData {
     pub sprite_index: u32,
-    pub color: Vec4,
     pub flags: u32,
+    pad: [u32; 2],
+    pub color: Vec4,
 }
-
-unsafe impl Byteable for TileGpuData {}
 
 #[derive(Debug, Default, RenderResources, TypeUuid)]
 #[uuid = "54d394ec-459c-48d3-9562-35fce6e88bda"]
@@ -142,8 +141,10 @@ impl From<&Tile> for TileGpuData {
     fn from(tile: &Tile) -> Self {
         Self {
             sprite_index: tile.sprite_index,
-            color: tile.color.into(),
             flags: tile.flags.bits(),
+            pad: Default::default(),
+            color: tile.color.into(),
+            //padding: Default::default(),
         }
     }
 }
